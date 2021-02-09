@@ -1,7 +1,8 @@
 config = {
-    target : document.getElementById("target"),
+    tradeInfo : document.getElementById("trade-real-estate"),
     prefectureCode : document.getElementById("prefectureSelect"),
-    cityCode : document.getElementById("cityCodeSelect"),
+    cityCode : document.getElementById("citySelect"),
+    searchBlock : document.getElementById("search-block"),
 }
 let prefectureCode = {
     "01" : "Hokkaido",
@@ -53,8 +54,37 @@ let prefectureCode = {
     "24" : "Mie",
 }
 
-class codeSelector{
-
+class RetrievalInfo{
+    constructor(start, end, prefecture, city) {
+        this.start = start;
+        this.end = end;
+        this.prefecture = prefecture;
+        this.city = city;
+    }
+}
+function getRetrievalInfo() {
+    let form = document.getElementById("form");
+    let start = form.querySelectorAll(`input[name="periodStart"]`)[0].value;
+    let end = form.querySelectorAll(`input[name="periodEnd"]`)[0].value;
+    
+    if (parseInt(start) < 20053 || parseInt(end) < 20053 || parseInt(start) > parseInt(end)){
+        form.querySelectorAll(`input[name="periodStart"]`)[0].value = "";
+        form.querySelectorAll(`input[name="periodEnd"]`)[0].value = "";
+        alert("unsupported value");
+    }
+    else {
+        let retrievalInfo = new RetrievalInfo(
+            form.querySelectorAll(`input[name="periodStart"]`)[0].value,
+            form.querySelectorAll(`input[name="periodEnd"]`)[0].value,
+            config.prefectureCode.value,
+            config.cityCode.value
+        );
+        config.searchBlock.classList.add("d-none");
+        // config.tradeInfo.append(getTransactionHistory(retrievalInfo));
+        getTransactionHistory(retrievalInfo);
+    }
+}
+class codeSelect{
     // 県選択ボタン作成関数
     static prefectureSelect(){
         const prefectureCodeTag = config.prefectureCode;
@@ -85,7 +115,7 @@ class codeSelector{
                 option.innerHTML = currentCityCode["name"];
                 cityCodeselectTag.append(option);
             }
-        })
+        });
     }
 
     // 県が選択されたら起動する関数
@@ -93,53 +123,56 @@ class codeSelector{
         let prefectureCodeNode = document.querySelectorAll("#prefectureSelect");
         for (let i = 0; i < prefectureCodeNode.length; i++){
             prefectureCodeNode[i].addEventListener("change", function(){
-                document.getElementById("cityCodeSelect").innerHTML = 
+                document.getElementById("citySelect").innerHTML = 
                 `
                     <option value="">Please select</option>
                 `;
                 let cityCode = prefectureCodeNode[i].value;
                 if (cityCode != "0"){
-                    codeSelector.getCityCodeAndSelectBtn(cityCode);
+                    codeSelect.getCityCodeAndSelectBtn(cityCode);
                 }
             })
         }
     }
 }
 
-// 2019年第1四半期〜2020年第4四半期 tokyo
-const tradeList = fetch("https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=20201&to=20204&area=13&city=13103");
-
-const jsonResponse = tradeList.then(function(response){
-    return response.json();
-});
-
-jsonResponse.then(function(data){
-    let array = data["data"];
-    const target = config.target;
-    for (let i = 0; i < array.length; i++){
-        let detail = array[i];
-        let container = document.createElement("div");
-        container.innerHTML = `
-        BuildingYear: ${detail["BuildingYear"]} Prefecture: ${detail["Prefecture"]} Municipality: ${detail["Municipality"]} DistrictName: ${detail["DistrictName"]} FloorAreaRatio: ¥${detail["FloorAreaRatio"]} FloorPlan: ${detail["FloorPlan"]} Period: ${detail["Period"]} TradePrice: ¥${detail["TradePrice"]}
-        `
-        target.append(container);
-    }
-});   
-
-
-
-
-codeSelector.prefectureSelect();
-codeSelector.cityCodeSelect();
-
-function  initializeUserAccount() {
-    
+function getTransactionHistory(RetrievalInfo) {
+    let tradePriceList = [];
+    let floorAreaRatioList = [];
+    let tardePriceByLayout = {};
+    let url = 
+    `
+        https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=${RetrievalInfo.start}&to=${RetrievalInfo.end}&area=${RetrievalInfo.prefecture}&city=${RetrievalInfo.city}
+    `;
+    let transactionHistory = fetch(url).then(resuponce=>resuponce.json()).then(function(data){
+        let tradeList = data["data"];
+        for (let i = 0; i < tradeList.length; i++){
+            let detail = tradeList[i];
+            if (detail["FloorPlan"] != undefined && detail["TradePrice"] != undefined){
+                if (tardePriceByLayout[detail["FloorPlan"]] != undefined){
+                    tardePriceByLayout[detail["FloorPlan"]] = parseInt(detail["TradePrice"]) > tardePriceByLayout[detail["FloorPlan"]] ? parseInt(detail["TradePrice"]) : tardePriceByLayout[detail["FloorPlan"]];
+                }
+                else {
+                    tardePriceByLayout[detail["FloorPlan"]] = parseInt(detail["TradePrice"]);
+                }
+            }
+            tradePriceList.push(parseInt(detail["TradePrice"]));
+            floorAreaRatioList.push(parseInt(detail["FloorAreaRatio"]));
+            
+        }
+        console.log(tardePriceByLayout);
+    });
+    // return container;
 }
 
 
 
-// 東京都内の市区町村一覧を取得例
-// https://www.land.mlit.go.jp/webland/api/CitySearch?area=13
+
+
+codeSelect.prefectureSelect(); 
+codeSelect.cityCodeSelect();
+
+
 
 
 // Area: "45"
