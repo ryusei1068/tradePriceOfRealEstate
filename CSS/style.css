@@ -7,5 +7,11 @@ thead,tfoot {
     color: #fff;
 }
 
+.form-group select{
+    width: 80%;
+}
+.form-group input{
+    width: 80%;
+}
 
 /* https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=20151&to=20152&area=13&city=13103 */
