@@ -54,6 +54,9 @@ let prefectureCode = {
     "24" : "Mie",
 }
 
+// APIで取得したcityCodeと地区名を紐付け
+let cityCode = {};
+
 class RetrievalInfo{
     constructor(start, end, prefecture, city) {
         this.start = start;
@@ -80,7 +83,6 @@ function getRetrievalInfo() {
             config.cityCode.value
         );
         config.searchBlock.classList.add("d-none");
-        // config.tradeInfo.append(getTransactionHistory(retrievalInfo));
         getTransactionHistory(retrievalInfo);
     }
 }
@@ -108,11 +110,13 @@ class codeSelect{
         const cityCodeselectTag = config.cityCode;
         let areaCode = fetch(url).then(resuponce=>resuponce.json()).then(function(data){
             let areaCodeList = data["data"];
+            cityCode = {};
             for (let i = 0; i < areaCodeList.length; i++){
                 let currentCityCode = areaCodeList[i];
                 let option = document.createElement("option");
                 option.value = currentCityCode["id"];
                 option.innerHTML = currentCityCode["name"];
+                cityCode[currentCityCode["id"]] = currentCityCode["name"];
                 cityCodeselectTag.append(option);
             }
         });
@@ -137,20 +141,21 @@ class codeSelect{
 }
 
 function getTransactionHistory(RetrievalInfo) {
-    let tradePriceList = [];
-    let floorAreaRatioList = [];
-    let tardePriceByLayout = {};
+    let tradePriceAndPrefecture = document.createElement('div');
     let url = 
     `
         https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=${RetrievalInfo.start}&to=${RetrievalInfo.end}&area=${RetrievalInfo.prefecture}&city=${RetrievalInfo.city}
     `;
     let transactionHistory = fetch(url).then(resuponce=>resuponce.json()).then(function(data){
+        let tradePriceList = [];
+        let floorAreaRatioList = [];
+        let tardePriceByLayout = {};
         let tradeList = data["data"];
         for (let i = 0; i < tradeList.length; i++){
             let detail = tradeList[i];
             if (detail["FloorPlan"] != undefined && detail["TradePrice"] != undefined){
-                if (tardePriceByLayout[detail["FloorPlan"]] != undefined){
-                    tardePriceByLayout[detail["FloorPlan"]] = parseInt(detail["TradePrice"]) > tardePriceByLayout[detail["FloorPlan"]] ? parseInt(detail["TradePrice"]) : tardePriceByLayout[detail["FloorPlan"]];
+                if (tardePriceByLayout[detail["FloorPlan"]]){
+                    tardePriceByLayout[detail["FloorPlan"]] = Math.max(tardePriceByLayout[detail["FloorPlan"]], parseInt(detail["TradePrice"]));
                 }
                 else {
                     tardePriceByLayout[detail["FloorPlan"]] = parseInt(detail["TradePrice"]);
@@ -160,12 +165,43 @@ function getTransactionHistory(RetrievalInfo) {
             floorAreaRatioList.push(parseInt(detail["FloorAreaRatio"]));
             
         }
-        console.log(tardePriceByLayout);
+        tradePriceAndPrefecture.append(tradeInfoPageTitle(RetrievalInfo), tradePricebyLayoutTable(tardePriceByLayout));
+        config.tradeInfo.append(tradePriceAndPrefecture);
     });
-    // return container;
 }
 
+function tradeInfoPageTitle(RetrievalInfo) {
+    let pageTitleDiv = document.createElement("div");
+    let tradeStart = RetrievalInfo.start;
+    let tradeEnd = RetrievalInfo.end;
+    pageTitleDiv.innerHTML = 
+    `
+        <h2>search results</h2>
+        <h3>
+            ${prefectureCode[RetrievalInfo.prefecture]} <br> 
+            ${cityCode[RetrievalInfo.city]}<br>
+            ${tradeStart.substring(0,tradeStart.length - 1)}yr._${tradeStart.substring(tradeStart.length-1)}Q / ${tradeEnd.substring(0, tradeEnd.length - 1)}yr._${tradeEnd.substring(tradeEnd.length-1)}Q
+        </h3>
+    `
+    return pageTitleDiv;
+}
 
+function tradePricebyLayoutTable(tradePrice){
+    let container = document.createElement('div');
+    container.classList.add("d-flex", "row", "mt-3");
+    for (let room in tradePrice){
+        container.innerHTML += 
+        `
+        <div class="col-md-6">
+            ${room}
+        </div>
+        <div class="col-md-6">
+            ¥${new Intl.NumberFormat().format(tradePrice[room])}
+        </div>
+        `
+    }
+    return container;
+}
 
 
 
