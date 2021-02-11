@@ -5,53 +5,53 @@ config = {
     searchBlock : document.getElementById("search-block"),
 }
 let prefectureCode = {
-    "01" : "Hokkaido",
-    "25" : "Shiga",
-    "02" : "Aomori",
-    "26" : "Kyoto",
-    "03" : "Iwate", 
-    "27" : "Osaka",
-    "04" : "Miyagi",
-    "28" : "Hyogo",
-    "05" : "Akita",
-    "29" : "Nara",
-    "06" : "Yamagata", 
-    "30" : "Wakayama",
-    "07" : "Fukushima",	
-    "31" : "Tottori",
-    "08" : "Ibaraki",	
-    "32" : "Shimane",
-    "09" : "Tochigi", 
-    "33" : "Okayama",
-    "10" : "Gunma",	
-    "34" : "Hiroshima",
-    "11" : "Saitama",	
-    "35" : "Yamaguchi",
-    "12" : "Chiba",	
-    "36" : "Tokushima",
-    "13" : "Tokyo",
-    "37" : "Kagawa",
-    "14" : "Kanagawa",	
-    "38" : "Ehime",
-    "15" : "Niigata",	
-    "39" : "Kochi",
-    "16" : "Toyama",	
-    "40" : "Fukuoka",
-    "17" : "Ishikawa",	
-    "41" : "Saga",
-    "18" : "Fukui",	
-    "42" : "Nagasaki",
-    "19" : "Yamanashi",	
-    "43" : "Kumamoto",
-    "20" : "Nagano",	
-    "44" : "Oita",
-    "21" : "Gifu",	
-    "45" : "Miyazaki",
-    "22" : "Shizuoka",	
-    "46" : "Kagoshima",
-    "23" : "Aichi",	
-    "47" : "Okinawa",
-    "24" : "Mie",
+    "01" : "北海道",
+    "25" : "滋賀県",
+    "02" : "青森県",
+    "26" : "京都府",
+    "03" : "岩手県", 
+    "27" : "大阪府",
+    "04" : "宮城県",
+    "28" : "兵庫県",
+    "05" : "秋田県",
+    "29" : "奈良県",
+    "06" : "山形県", 
+    "30" : "和歌山県",
+    "07" : "福島県",	
+    "31" : "鳥取県",
+    "08" : "茨城県",	
+    "32" : "島根県",
+    "09" : "栃木県", 
+    "33" : "岡山県",
+    "10" : "群馬県",	
+    "34" : "広島県",
+    "11" : "埼玉県",	
+    "35" : "山口県",
+    "12" : "千葉県",	
+    "36" : "徳島県",
+    "13" : "東京都",
+    "37" : "香川県",
+    "14" : "神奈川県",	
+    "38" : "愛媛県",
+    "15" : "新潟県",	
+    "39" : "高知県",
+    "16" : "富山県",	
+    "40" : "福岡県",
+    "17" : "石川県",	
+    "41" : "佐賀県",
+    "18" : "福井県",	
+    "42" : "長崎県",
+    "19" : "山梨県",	
+    "43" : "熊本県",
+    "20" : "長野県",	
+    "44" : "大分県",
+    "21" : "岐阜県",	
+    "45" : "宮崎県",
+    "22" : "静岡県",	
+    "46" : "鹿児島県",
+    "23" : "愛知県",	
+    "47" : "沖縄県",
+    "24" : "三重県",
 }
 
 // APIで取得したcityCodeと地区名を紐付け
@@ -106,7 +106,7 @@ class codeSelect{
 
     // 市区町村選択ボタン作成関数
     static getCityCodeAndSelectBtn(prefectureCode) {
-        let url = "https://www.land.mlit.go.jp/webland_english/api/CitySearch?area=" + prefectureCode;
+        let url = "https://www.land.mlit.go.jp/webland/api/CitySearch?area=" + prefectureCode;
         const cityCodeselectTag = config.cityCode;
         let areaCode = fetch(url).then(resuponce=>resuponce.json()).then(function(data){
             let areaCodeList = data["data"];
@@ -129,7 +129,7 @@ class codeSelect{
             prefectureCodeNode[i].addEventListener("change", function(){
                 document.getElementById("citySelect").innerHTML = 
                 `
-                    <option value="">Please select</option>
+                    <option value="">選択してください</option>
                 `;
                 let cityCode = prefectureCodeNode[i].value;
                 if (cityCode != "0"){
@@ -144,7 +144,7 @@ function getTransactionHistory(RetrievalInfo) {
     let tradePriceAndPrefecture = document.createElement('div');
     let url = 
     `
-        https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=${RetrievalInfo.start}&to=${RetrievalInfo.end}&area=${RetrievalInfo.prefecture}&city=${RetrievalInfo.city}
+        https://www.land.mlit.go.jp/webland/api/TradeListSearch?from=${RetrievalInfo.start}&to=${RetrievalInfo.end}&area=${RetrievalInfo.prefecture}&city=${RetrievalInfo.city}
     `;
     let transactionHistory = fetch(url).then(resuponce=>resuponce.json()).then(function(data){
         let tradePriceList = [];
@@ -165,7 +165,7 @@ function getTransactionHistory(RetrievalInfo) {
             floorAreaRatioList.push(parseInt(detail["FloorAreaRatio"]));
             
         }
-        tradePriceAndPrefecture.append(tradeInfoPageTitle(RetrievalInfo), tradePricebyLayoutTable(tardePriceByLayout));
+        tradePriceAndPrefecture.append(tradeInfoPageTitle(RetrievalInfo), tradePricebyLayoutTable(tardePriceByLayout), maxOrMinTradePriceInCity(tradePriceList, "max"), maxOrMinTradePriceInCity(tradePriceList, "min"));
         config.tradeInfo.append(tradePriceAndPrefecture);
     });
 }
@@ -176,12 +176,12 @@ function tradeInfoPageTitle(RetrievalInfo) {
     let tradeEnd = RetrievalInfo.end;
     pageTitleDiv.innerHTML = 
     `
-        <h2>search results</h2>
-        <h3>
+        <h3>検索結果</h3>
+        <h4>
             ${prefectureCode[RetrievalInfo.prefecture]} <br> 
             ${cityCode[RetrievalInfo.city]}<br>
-            ${tradeStart.substring(0,tradeStart.length - 1)}yr._${tradeStart.substring(tradeStart.length-1)}Q / ${tradeEnd.substring(0, tradeEnd.length - 1)}yr._${tradeEnd.substring(tradeEnd.length-1)}Q
-        </h3>
+            ${tradeStart.substring(0,tradeStart.length - 1)}年第${tradeStart.substring(tradeStart.length-1)}四半期 ~ ${tradeEnd.substring(0, tradeEnd.length - 1)}年第${tradeEnd.substring(tradeEnd.length-1)}四半期
+        </h4>
     `
     return pageTitleDiv;
 }
@@ -203,6 +203,34 @@ function tradePricebyLayoutTable(tradePrice){
     return container;
 }
 
+function maxOrMinTradePriceInCity(tradePriceList, maxOrmin){
+    let container = document.createElement('div');
+    container.classList.add("d-flex", "mt-3", "row");
+    let price = maxOrmin == "max" ? maximumTradePrice(tradePriceList) : minimumTradePrice(tradePriceList);
+    let title = maxOrmin == "max" ? "最高値" : "最安値";
+    container.innerHTML = 
+    `
+        <div class="col-md-6">
+            ${title}
+        </div>
+        <div class="col-md-6">
+            ¥${new Intl.NumberFormat().format(price)}
+        </div>
+    `
+    return container;
+}
+
+function maximumTradePrice(tradePriceList){
+    return tradePriceList.reduce(function(a,b){
+        return Math.max(a,b);
+    })
+}
+
+function minimumTradePrice(tradePriceList){
+    return tradePriceList.reduce(function(a,b){
+        return Math.min(a,b);
+    })
+}
 
 
 codeSelect.prefectureSelect(); 
@@ -228,3 +256,7 @@ codeSelect.cityCodeSelect();
 // TradePrice: "90000000"
 // Type: "中古マンション等"
 // Use: "住宅"
+
+
+// https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=20201&to=20202&area=05&city=05202
+// https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=20201&to=20202&area=13&city=13102
