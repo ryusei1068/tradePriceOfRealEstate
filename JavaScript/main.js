@@ -141,19 +141,19 @@ class codeSelect{
 }
 
 function getTransactionHistory(RetrievalInfo) {
-    let tradePriceAndPrefecture = document.createElement('div');
+    let container = document.createElement('div');
     let url = 
     `
         https://www.land.mlit.go.jp/webland/api/TradeListSearch?from=${RetrievalInfo.start}&to=${RetrievalInfo.end}&area=${RetrievalInfo.prefecture}&city=${RetrievalInfo.city}
     `;
     let transactionHistory = fetch(url).then(resuponce=>resuponce.json()).then(function(data){
-        let tradePriceList = [];
-        let floorAreaRatioList = [];
         let tardePriceByLayout = {};
+        let districtNameList = [];
         let tradeList = data["data"];
         for (let i = 0; i < tradeList.length; i++){
             let detail = tradeList[i];
-            if (detail["FloorPlan"] != undefined && detail["TradePrice"] != undefined){
+            districtNameList.push(detail["DistrictName"]);
+            if (detail["FloorPlan"] != undefined){
                 if (tardePriceByLayout[detail["FloorPlan"]]){
                     tardePriceByLayout[detail["FloorPlan"]] = Math.max(tardePriceByLayout[detail["FloorPlan"]], parseInt(detail["TradePrice"]));
                 }
@@ -161,63 +161,74 @@ function getTransactionHistory(RetrievalInfo) {
                     tardePriceByLayout[detail["FloorPlan"]] = parseInt(detail["TradePrice"]);
                 }
             }
-            tradePriceList.push(parseInt(detail["TradePrice"]));
-            floorAreaRatioList.push(parseInt(detail["FloorAreaRatio"]));
-            
         }
-        tradePriceAndPrefecture.append(tradeInfoPageTitle(RetrievalInfo), tradePricebyLayoutTable(tardePriceByLayout), maxOrMinTradePriceInCity(tradePriceList, "max"), maxOrMinTradePriceInCity(tradePriceList, "min"));
-        config.tradeInfo.append(tradePriceAndPrefecture);
+        let pricePerUnitByindividualRegion = getPricePerUnitByIndividualRegion(tradeList, districtNameList);
+        container.append(infoTable(tardePriceByLayout, "間取り", "最大取引額", `<i class="fas fa-home"></i>`));
+        container.append(infoTable(pricePerUnitByindividualRegion, "地区名", "総取引額", `<i class="fas fa-location-arrow"></i>`));
+        config.tradeInfo.append(container);
     });
 }
 
-function tradeInfoPageTitle(RetrievalInfo) {
-    let pageTitleDiv = document.createElement("div");
-    let tradeStart = RetrievalInfo.start;
-    let tradeEnd = RetrievalInfo.end;
-    pageTitleDiv.innerHTML = 
-    `
-        <h3>検索結果</h3>
-        <h4>
-            ${prefectureCode[RetrievalInfo.prefecture]} <br> 
-            ${cityCode[RetrievalInfo.city]}<br>
-            ${tradeStart.substring(0,tradeStart.length - 1)}年第${tradeStart.substring(tradeStart.length-1)}四半期 ~ ${tradeEnd.substring(0, tradeEnd.length - 1)}年第${tradeEnd.substring(tradeEnd.length-1)}四半期
-        </h4>
-    `
-    return pageTitleDiv;
-}
-
-function tradePricebyLayoutTable(tradePrice){
-    let container = document.createElement('div');
-    container.classList.add("d-flex", "row", "mt-3");
-    for (let room in tradePrice){
-        container.innerHTML += 
-        `
-        <div class="col-md-6">
-            ${room}
-        </div>
-        <div class="col-md-6">
-            ¥${new Intl.NumberFormat().format(tradePrice[room])}
-        </div>
-        `
+function getPricePerUnitByIndividualRegion(tradeList, districtNameList) {
+    let pricePerUnitByindividualRegion = {};
+    for (let i = 0 ; i < districtNameList.length; i++){
+        pricePerUnitByindividualRegion[districtNameList[i]] = 0;
     }
-    return container;
+    for (let i = 0 ; i < tradeList.length; i++){
+        if (tradeList[i]["TradePrice"] != undefined){
+            pricePerUnitByindividualRegion[tradeList[i]["DistrictName"]] += parseInt(tradeList[i]["TradePrice"]);
+        }
+    }
+    return pricePerUnitByindividualRegion;
 }
 
-function maxOrMinTradePriceInCity(tradePriceList, maxOrmin){
-    let container = document.createElement('div');
-    container.classList.add("d-flex", "mt-3", "row");
-    let price = maxOrmin == "max" ? maximumTradePrice(tradePriceList) : minimumTradePrice(tradePriceList);
-    let title = maxOrmin == "max" ? "最高値" : "最安値";
-    container.innerHTML = 
+function pagetitle(titlestr, prefectrue, city, periodstart, periodend) {
+    let div = document.createElement('div');
+    div.classList.add('d-flex', "justify-content-center", "mt-3", "row");
+
+    return "";
+}
+
+function infoTable(tradePrice_floorMap, layout, pricetitle, icon){
+    let table = document.createElement("table");
+    table.classList.add("table","table-striped");
+    let tbody = document.createElement("tbody");
+    table.innerHTML = 
     `
-        <div class="col-md-6">
-            ${title}
-        </div>
-        <div class="col-md-6">
-            ¥${new Intl.NumberFormat().format(price)}
-        </div>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>${layout}</th>
+                <th>${pricetitle}</th>
+            </tr>
+        </thead>
     `
-    return container;
+
+    if (Object.keys(tradePrice_floorMap).length){
+        for (let room in tradePrice_floorMap){
+            tbody.innerHTML += 
+            `
+            <tr>
+                <th scope="row">${icon}</th>
+                <td>${room}</td>
+                <td>¥ ${new Intl.NumberFormat().format(tradePrice_floorMap[room])}</td>
+            </tr>
+            `
+        }
+        table.append(tbody);
+    }
+    else {
+        tbody.innerHTML += 
+            `
+            <tr>
+                <th scope="row">${icon}</th>
+                <td>No Data</td>
+                <td>No Data</td>
+            </tr>
+            `
+        table.append(tbody)
+    }
+    return table;
 }
 
 function maximumTradePrice(tradePriceList){
@@ -259,4 +270,4 @@ codeSelect.cityCodeSelect();
 
 
 // https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=20201&to=20202&area=05&city=05202
-// https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=20201&to=20202&area=13&city=13102
+// https://www.land.mlit.go.jp/webland/api/TradeListSearch?from=20201&to=20202&area=13&city=13102
