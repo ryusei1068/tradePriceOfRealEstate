@@ -12,48 +12,43 @@
     <title>Document</title>
 </head>
 <body>
-    <div class="vh-100 d-flex flex-column justify-content-center align-items-center" id="search-block">
-        <div class="d-flex align-items-center col-md-7 col-10">
-            <div class="bg-light col-12 text-center p-4">
-            <h2 class="pb-3">不動産取引価格</h2>
-                <form action="" id="form" onsubmit="getRetrievalInfo(); event.preventDefault()"> 
-                    <div class="form-group m-2">
-                        <input type="text" name="periodStart" class="periodStart" placeholder="starting of a translation (YYYYN)" value="20201" >
-                    </div>
-                    <div class="form-group m-2">
-                        <input type="text" name="periodEnd" class="periodEnd" placeholder="closing of a transaction (YYYYN)" value="20202">
-                    </div>
-                    <div class="form-group m-2">
-                        <select name="prefecture"  id="prefectureSelect" >
-                            <option value="0">選択してください</option>
-                        </select>
-                    </div>
-                    <div class="form-group m-2">
-                        <select name="cityCode" id="citySelect" >
-                            <option value="0">選択してください</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary m-2" style="width: 40%;">Search</button>
-                </form>
-                <!-- <div class="d-flex mt-3 row">
-                    <div class="bg-dark col-md-6">
-                        box
-                    </div>
-                    <div class="bg-light col-md-6">
-                        box
-                    </div>
-                    <div class="bg-light col-md-6">
-                        box
-                    </div>
-                </div> -->
+    <div class="vh-100 d-flex flex-column justify-content-center align-items-center container" id="search-block">
+        <div class="bg-light col-md-7 text-center p-4">
+        <h2 class="pb-3">
+            <i class="fab fa-searchengin"></i>
+            <i class="fas fa-home"></i>
+        </h2>
+            <form action="" id="form" onsubmit="getRetrievalInfo(); event.preventDefault()"> 
+                <div class="form-group m-2">
+                    <input type="text" name="periodStart" class="periodStart" placeholder="取引時期FROM" value="20201" >
+                </div>
+                <div class="form-group m-2">
+                    <input type="text" name="periodEnd" class="periodEnd" placeholder="取引時期TO" value="20202">
+                </div>
+                <div class="form-group m-2">
+                    <select name="prefecture"  id="prefectureSelect" >
+                        <option value="0">選択してください</option>
+                    </select>
+                </div>
+                <div class="form-group m-2">
+                    <select name="cityCode" id="citySelect" >
+                        <option value="0">選択してください</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary m-2" style="width: 40%;">検索</button>
+            </form>
+            <div class="mt-3">
+                <a href="./description.html">
+                    <p>検索方法</p>
+                </a>
             </div>
         </div>
+
     </div>
-    <div id="trade-real-estate" class="tradeInfoPage">
+    <div id="trade-real-estate" class="tradeInfoPage container">
 
 
     </div>
     <script src="./JavaScript/main.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
 </body>
 </html>

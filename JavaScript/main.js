@@ -69,23 +69,27 @@ function getRetrievalInfo() {
     let form = document.getElementById("form");
     let start = form.querySelectorAll(`input[name="periodStart"]`)[0].value;
     let end = form.querySelectorAll(`input[name="periodEnd"]`)[0].value;
+    let prefecture = config.prefectureCode.value;
+    let city = config.cityCode.value;
     
-    if (parseInt(start) < 20053 || parseInt(end) < 20053 || parseInt(start) > parseInt(end)){
+    
+    if (parseInt(start) < 20053 || parseInt(end) < 20053 || parseInt(start) > parseInt(end) || prefecture == 0 || city == 0){
         form.querySelectorAll(`input[name="periodStart"]`)[0].value = "";
         form.querySelectorAll(`input[name="periodEnd"]`)[0].value = "";
-        alert("unsupported value");
+        alert("全て入力してください");
     }
     else {
         let retrievalInfo = new RetrievalInfo(
             form.querySelectorAll(`input[name="periodStart"]`)[0].value,
             form.querySelectorAll(`input[name="periodEnd"]`)[0].value,
-            config.prefectureCode.value,
-            config.cityCode.value
+            prefecture,
+            city
         );
         config.searchBlock.classList.add("d-none");
         getTransactionHistory(retrievalInfo);
     }
 }
+// namespase
 class codeSelect{
     // 県選択ボタン作成関数
     static prefectureSelect(){
@@ -163,6 +167,7 @@ function getTransactionHistory(RetrievalInfo) {
             }
         }
         let pricePerUnitByindividualRegion = getPricePerUnitByIndividualRegion(tradeList, districtNameList);
+        container.append(pagetitle("不動産取引情報",RetrievalInfo.prefecture, RetrievalInfo.city , RetrievalInfo.start, RetrievalInfo.end));
         container.append(infoTable(tardePriceByLayout, "間取り", "最大取引額", `<i class="fas fa-home"></i>`));
         container.append(infoTable(pricePerUnitByindividualRegion, "地区名", "総取引額", `<i class="fas fa-location-arrow"></i>`));
         config.tradeInfo.append(container);
@@ -182,11 +187,27 @@ function getPricePerUnitByIndividualRegion(tradeList, districtNameList) {
     return pricePerUnitByindividualRegion;
 }
 
-function pagetitle(titlestr, prefectrue, city, periodstart, periodend) {
-    let div = document.createElement('div');
-    div.classList.add('d-flex', "justify-content-center", "mt-3", "row");
-
-    return "";
+function pagetitle(title,prefecturecode, citycode, periodstart, periodend) {
+    let container = document.createElement('div');
+    container.classList.add("mt-3");
+    console.log(periodstart)
+    let perisondStartStr = `${periodstart.substr(0, periodstart.length - 1)}年第${periodstart.substr(periodstart.length - 1)}四半期`;
+    let perisondEndStr = `${periodend.substr(0, periodend.length - 1)}年第${periodend.substr(periodend.length - 1)}四半期`;
+    container.innerHTML = 
+    `   
+    <ul class="list-group text-center">
+        <li class="list-group-item">
+            <h4>${title}</h4>
+        </li>
+        <li class="list-group-item">
+            <h4>${prefectureCode[prefecturecode]} / ${cityCode[citycode]}</h4>
+        </li>
+        <li class="list-group-item">
+            <h4>${perisondStartStr}~${perisondEndStr}</h4>
+        </li>
+    </ul>
+    `
+    return container;
 }
 
 function infoTable(tradePrice_floorMap, layout, pricetitle, icon){
