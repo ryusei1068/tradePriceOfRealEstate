@@ -1,9 +1,10 @@
 config = {
-    tradeInfo : document.getElementById("trade-real-estate"),
     prefectureCode : document.getElementById("prefectureSelect"),
     cityCode : document.getElementById("citySelect"),
     searchBlock : document.getElementById("search-block"),
+    tradeinfotable : document.getElementById("ttradeinfotable"),
 }
+
 let prefectureCode = {
     "01" : "北海道",
     "25" : "滋賀県",
@@ -86,7 +87,7 @@ function getRetrievalInfo() {
             city
         );
         config.searchBlock.classList.add("d-none");
-        getTransactionHistory(retrievalInfo);
+        getInfo(retrievalInfo);
     }
 }
 // namespase
@@ -144,73 +145,99 @@ class codeSelect{
     }
 }
 
-function getTransactionHistory(RetrievalInfo) {
-    let container = document.createElement('div');
+function getInfo(RetrievalInfo) {
     let url = 
     `
         https://www.land.mlit.go.jp/webland/api/TradeListSearch?from=${RetrievalInfo.start}&to=${RetrievalInfo.end}&area=${RetrievalInfo.prefecture}&city=${RetrievalInfo.city}
     `;
     let transactionHistory = fetch(url).then(resuponce=>resuponce.json()).then(function(data){
-        let tardePriceByLayout = {};
-        let districtNameList = [];
-        let tradeList = data["data"];
-        for (let i = 0; i < tradeList.length; i++){
-            let detail = tradeList[i];
-            districtNameList.push(detail["DistrictName"]);
-            if (detail["FloorPlan"] != undefined){
-                if (tardePriceByLayout[detail["FloorPlan"]]){
-                    tardePriceByLayout[detail["FloorPlan"]] = Math.max(tardePriceByLayout[detail["FloorPlan"]], parseInt(detail["TradePrice"]));
-                }
-                else {
-                    tardePriceByLayout[detail["FloorPlan"]] = parseInt(detail["TradePrice"]);
-                }
-            }
-        }
-        let pricePerUnitByindividualRegion = getPricePerUnitByIndividualRegion(tradeList, districtNameList);
-        container.append(pagetitle("不動産取引情報",RetrievalInfo.prefecture, RetrievalInfo.city , RetrievalInfo.start, RetrievalInfo.end));
-        container.append(infoTable(tardePriceByLayout, "間取り", "最大取引額", `<i class="fas fa-home"></i>`));
-        container.append(infoTable(pricePerUnitByindividualRegion, "地区名", "総取引額", `<i class="fas fa-location-arrow"></i>`));
-        config.tradeInfo.append(container);
+        let tradeInfoList = data["data"];
+
+        let maxtardePriceByFloorPlan = collection(tradeInfoList, "FloorPlan", "TradePrice", "max");
+        let tradePriceindividualRegionAvg = collection(tradeInfoList, "DistrictName", "TradePrice", "avg");
+
     });
 }
 
-function getPricePerUnitByIndividualRegion(tradeList, districtNameList) {
-    let pricePerUnitByindividualRegion = {};
-    for (let i = 0 ; i < districtNameList.length; i++){
-        pricePerUnitByindividualRegion[districtNameList[i]] = 0;
+function pagination(){
+    let div = document.createElement('div');
+    div.classList.add("d-flex", "justify-content-center", "mt-3", "pageitem", "flex-column","h-auto", "align-items-center");
+    div.innerHTML = 
+    `
+    <div><b>お探しのものはなんですか？</b></div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            <li class="page-item">
+                <a class="page-link" href="./index.html" aria-label="Previous">
+                <span aria-hidden="true"><i class="fas fa-search"></i></span>
+                <span class="sr-only">Previous</span>
+                </a>
+            </li>
+            <li class="page-item" id="page1"><a class="page-link" >1</a></li>
+            <li class="page-item" id="page2"><a class="page-link" >2</a></li>
+            <li class="page-item" id="page3"><a class="page-link" >3</a></li>
+        </ul>
+    </nav>
+    `
+    return div;
+}
+
+function collection(tradeInfolist, traget, infoyouwant, purpose=null){
+    let infomap = {};
+    for (let i = 0; i < tradeInfolist.length; i++){
+        infomap[tradeInfolist[i][traget]] = purpose == "max" ? 0 : purpose == "avg" ? [0,0] : [];
     }
-    for (let i = 0 ; i < tradeList.length; i++){
-        if (tradeList[i]["TradePrice"] != undefined){
-            pricePerUnitByindividualRegion[tradeList[i]["DistrictName"]] += parseInt(tradeList[i]["TradePrice"]);
+    for (let i = 0; i < tradeInfolist.length; i++){
+        if (purpose == "max" ){
+            infomap[tradeInfolist[i][traget]] = Math.max(parseInt(tradeInfolist[i][infoyouwant]),infomap[tradeInfolist[i][traget]]);
+        } 
+        else if (purpose == "avg"){
+            infomap[tradeInfolist[i][traget]][0] += parseInt(tradeInfolist[i][infoyouwant]);
+            infomap[tradeInfolist[i][traget]][1]++;
+        }
+        else {
+            infomap[tradeInfolist[i][traget]].push(parseInt(tradeInfolist[i][infoyouwant]));
         }
     }
-    return pricePerUnitByindividualRegion;
+    return infomap;
 }
 
-function pagetitle(title,prefecturecode, citycode, periodstart, periodend) {
+function splitString(periodstr){
+    return `${periodstr.substr(0,periodstr.length-1)}年第${periodstr.substr(periodstr.length-1)}四半期`;
+}
+
+function isdataExist(str){
+    return str ? true : false;
+}
+
+function concatenation(str1, str2) {
+    return isdataExist(str1) ? str1 + "-" + str2 : null;
+}
+
+function pagetitle(title, prefectureAndCity, periodStartToEnd, infotabletitle=null) {
+    let titleElementList = [title, periodStartToEnd, prefectureAndCity, infotabletitle];
     let container = document.createElement('div');
     container.classList.add("mt-3");
-    console.log(periodstart)
-    let perisondStartStr = `${periodstart.substr(0, periodstart.length - 1)}年第${periodstart.substr(periodstart.length - 1)}四半期`;
-    let perisondEndStr = `${periodend.substr(0, periodend.length - 1)}年第${periodend.substr(periodend.length - 1)}四半期`;
-    container.innerHTML = 
-    `   
-    <ul class="list-group text-center">
-        <li class="list-group-item">
-            <h4>${title}</h4>
-        </li>
-        <li class="list-group-item">
-            <h4>${prefectureCode[prefecturecode]} / ${cityCode[citycode]}</h4>
-        </li>
-        <li class="list-group-item">
-            <h4>${perisondStartStr}~${perisondEndStr}</h4>
-        </li>
-    </ul>
-    `
+
+    let ul = document.createElement('ul');
+    ul.classList.add("list-group", "text-center");
+
+    for (let i = 0; i < titleElementList.length; i++){
+        if (titleElementList[i] != null){
+            ul.innerHTML += 
+            `
+            <li class="list-group-item">
+                ${titleElementList[i]}
+            </li>
+            `
+        }
+    }
+    container.append(ul)
     return container;
 }
-
-function infoTable(tradePrice_floorMap, layout, pricetitle, icon){
+function infoTable(infoMap, layout, pricetitle, icon, getdata=null){
+    let container = document.createElement("div");
+    container.classList.add("mt-3")
     let table = document.createElement("table");
     table.classList.add("table","table-striped");
     let tbody = document.createElement("tbody");
@@ -225,14 +252,21 @@ function infoTable(tradePrice_floorMap, layout, pricetitle, icon){
         </thead>
     `
 
-    if (Object.keys(tradePrice_floorMap).length){
-        for (let room in tradePrice_floorMap){
+    if (Object.keys(infoMap).length){
+        let data = "";
+        for (let key in infoMap){
+            if (getdata == "avg"){
+                data = (infoMap[key][0] / infoMap[key][1]).toFixed(1); 
+            }
+            else {
+                data = infoMap[key];
+            }
             tbody.innerHTML += 
             `
             <tr>
                 <th scope="row">${icon}</th>
-                <td>${room}</td>
-                <td>¥ ${new Intl.NumberFormat().format(tradePrice_floorMap[room])}</td>
+                <td>${key}</td>
+                <td>¥ ${new Intl.NumberFormat().format(data)}</td>
             </tr>
             `
         }
@@ -249,7 +283,8 @@ function infoTable(tradePrice_floorMap, layout, pricetitle, icon){
             `
         table.append(tbody)
     }
-    return table;
+    container.append(table);
+    return container;
 }
 
 function maximumTradePrice(tradePriceList){
@@ -265,29 +300,33 @@ function minimumTradePrice(tradePriceList){
 }
 
 
+
+
 codeSelect.prefectureSelect(); 
 codeSelect.cityCodeSelect();
 
 
+{/* <div class="progress">
+<div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+</div> */}
 
 
-// Area: "45"
-// BuildingYear: "平成23年"
-// CityPlanning: "商業地域" 
-// CoverageRatio: "80"
-// DistrictName: "六本木"
-// FloorAreaRatio: "700"
-// FloorPlan: "１ＬＤＫ"
-// Municipality: "港区"
-// MunicipalityCode: "13103"
-// Period: "2019年第１四半期"
-// Prefecture: "東京都"
-// Purpose: "住宅"
-// Renovation: "未改装"
-// Structure: "ＲＣ"
-// TradePrice: "90000000"
-// Type: "中古マンション等"
-// Use: "住宅"
+// "Type":"中古マンション等"
+// "MunicipalityCode":"13102"
+// "Prefecture":"東京都"
+// "Municipality":"中央区"
+// "DistrictName":"明石町"
+// "TradePrice":"53000000"
+// "FloorPlan":"２ＤＫ"
+// "Area":"50"
+// "BuildingYear":"平成24年"
+// "Structure":"ＲＣ"
+// "Use":"住宅"
+// "CityPlanning":"第２種住居地域"
+// "CoverageRatio":"60"
+// "FloorAreaRatio":"400"
+// "Period":"2020年第１四半期"
+// "Renovation":"未改装"
 
 
 // https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=20201&to=20202&area=05&city=05202
