@@ -2,7 +2,7 @@ config = {
     prefectureCode : document.getElementById("prefectureSelect"),
     cityCode : document.getElementById("citySelect"),
     searchBlock : document.getElementById("search-block"),
-    tradeinfotable : document.getElementById("ttradeinfotable"),
+    tradeinfotable : document.getElementById("tradeinfotable"),
 }
 
 let prefectureCode = {
@@ -66,6 +66,7 @@ class RetrievalInfo{
         this.city = city;
     }
 }
+
 function getRetrievalInfo() {
     let form = document.getElementById("form");
     let start = form.querySelectorAll(`input[name="periodStart"]`)[0].value;
@@ -156,6 +157,25 @@ function getInfo(RetrievalInfo) {
         let maxtardePriceByFloorPlan = collection(tradeInfoList, "FloorPlan", "TradePrice", "max");
         let tradePriceindividualRegionAvg = collection(tradeInfoList, "DistrictName", "TradePrice", "avg");
 
+        let tradePriceTotalDistrict = collection(tradeInfoList, "DistrictName", "TradePrice", "total");
+        let tradePriceTotalCity = collection(tradeInfoList, "Prefecture", "TradePrice", "total"); 
+
+        let numberOftrasanctionsDistrict = collection(tradeInfoList, "DistrictName", null);
+        let numberOftrasanctionsCity = collection(tradeInfoList, "Prefecture", null);
+
+        for (let key in numberOftrasanctionsCity){
+            console.log(key);
+            console.log(numberOftrasanctionsCity[key]);
+        }
+        console.log("----------------------------------")
+        for (let key in numberOftrasanctionsDistrict){
+            console.log(key);
+            console.log(numberOftrasanctionsDistrict[key]);
+        }
+
+        // config.tradeinfotable.append(pagetitle("地区別取引高割合", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),progressHTML(tradePriceTotalDistrict, tradePriceTotalCity));
+
+        config.tradeinfotable.append(progressHTML(numberOftrasanctionsDistrict, numberOftrasanctionsCity));
     });
 }
 
@@ -182,10 +202,14 @@ function pagination(){
     return div;
 }
 
+
+//index0 = total tradeprice
+//index1 = number of transactions
+
 function collection(tradeInfolist, traget, infoyouwant, purpose=null){
     let infomap = {};
     for (let i = 0; i < tradeInfolist.length; i++){
-        infomap[tradeInfolist[i][traget]] = purpose == "max" ? 0 : purpose == "avg" ? [0,0] : [];
+        infomap[tradeInfolist[i][traget]] = purpose == "max" ? 0 : purpose == "avg" ? [0,0] : purpose == "total" ? 0 : 0;
     }
     for (let i = 0; i < tradeInfolist.length; i++){
         if (purpose == "max" ){
@@ -195,8 +219,11 @@ function collection(tradeInfolist, traget, infoyouwant, purpose=null){
             infomap[tradeInfolist[i][traget]][0] += parseInt(tradeInfolist[i][infoyouwant]);
             infomap[tradeInfolist[i][traget]][1]++;
         }
+        else if (purpose == "total"){
+            infomap[tradeInfolist[i][traget]] += parseInt(tradeInfolist[i][infoyouwant]);
+        }
         else {
-            infomap[tradeInfolist[i][traget]].push(parseInt(tradeInfolist[i][infoyouwant]));
+            infomap[tradeInfolist[i][traget]]++;
         }
     }
     return infomap;
@@ -212,7 +239,7 @@ function isdataExist(str){
 
 function concatenation(str1, str2) {
     return isdataExist(str1) ? str1 + "-" + str2 : null;
-}
+}　
 
 function pagetitle(title, prefectureAndCity, periodStartToEnd, infotabletitle=null) {
     let titleElementList = [title, periodStartToEnd, prefectureAndCity, infotabletitle];
@@ -235,6 +262,8 @@ function pagetitle(title, prefectureAndCity, periodStartToEnd, infotabletitle=nu
     container.append(ul)
     return container;
 }
+
+
 function infoTable(infoMap, layout, pricetitle, icon, getdata=null){
     let container = document.createElement("div");
     container.classList.add("mt-3")
@@ -299,8 +328,43 @@ function minimumTradePrice(tradePriceList){
     })
 }
 
+function editData(tradeInfoCity){
+    if (Object.keys(tradeInfoCity).length == 1){
+        return tradeInfoCity[Object.keys(tradeInfoCity)[0]];
+    }
+    else {
+        let keys = Object.keys(tradeInfoCity);
+        let total = 0;
+        for (let i = 0; i < keys; i++){
+            total += tradeInfoCity[key];
+        }
+        return total;
+    }
+}
 
+function progressHTML(tradeInfoDistrict, tradeInfoCity, mainInfo=null, icon=null, info1=null, info2=null){
+    let total = editData(tradeInfoCity);
+    let progresscontainer = document.createElement("div");
+    progresscontainer.classList.add("mt-3");
+    progresscontainer.innerHTML = 
+    `
+    <b>${mainInfo}: ${icon}${new Intl.NumberFormat().format(total)}</b>
+    `
+    for (let key in tradeInfoDistrict){
+        let rate = (tradeInfoDistrict[key] / total * 100).toFixed(6);
+        let div = document.createElement("div");
+        div.innerHTML = 
+        `   
+        <div class="mt-3">地区: ${key} - ${info1}割合: ${rate}% - ${info2}: <b>${icon}${new Intl.NumberFormat().format(tradeInfoDistrict[key])}</b></div>
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated text-dark" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: ${rate}%"></div>
+        </div>
+        `
+        progresscontainer.append(div);
+    }
 
+    return progresscontainer;
+}
 
 codeSelect.prefectureSelect(); 
 codeSelect.cityCodeSelect();
@@ -329,5 +393,5 @@ codeSelect.cityCodeSelect();
 // "Renovation":"未改装"
 
 
-// https://www.land.mlit.go.jp/webland_english/api/TradeListSearch?from=20201&to=20202&area=05&city=05202
+// https://www.land.mlit.go.jp/webland/api/TradeListSearch?from=20201&to=20202&area=05&city=05202
 // https://www.land.mlit.go.jp/webland/api/TradeListSearch?from=20201&to=20202&area=13&city=13102
