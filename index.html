@@ -20,10 +20,10 @@
         </h2>
             <form action="" id="form" onsubmit="getRetrievalInfo(); event.preventDefault()"> 
                 <div class="form-group m-2">
-                    <input type="text" name="periodStart" class="periodStart" placeholder="取引時期FROM" value="20201" >
+                    <input type="text" name="periodStart" class="periodStart" placeholder="取引時期FROM" >
                 </div>
                 <div class="form-group m-2">
-                    <input type="text" name="periodEnd" class="periodEnd" placeholder="取引時期TO" value="20202">
+                    <input type="text" name="periodEnd" class="periodEnd" placeholder="取引時期TO">
                 </div>
                 <div class="form-group m-2">
                     <select name="prefecture"  id="prefectureSelect" >
@@ -45,8 +45,13 @@
             </div>
         </div>
     </div>
-    <div id="tradeinfotable" class="h-auto tradeInfoPage container d-flex flex-column justify-content-center">
-        
+    <div class="h-auto">
+        <div id="tradeinfotable" class="tradeInfoPage container d-flex flex-column justify-content-center">
+
+        </div>
+        <div id="nav">
+
+        </div>
     </div>
     <script src="./JavaScript/main.js"></script>
 </body>

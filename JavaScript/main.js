@@ -3,6 +3,7 @@ config = {
     cityCode : document.getElementById("citySelect"),
     searchBlock : document.getElementById("search-block"),
     tradeinfotable : document.getElementById("tradeinfotable"),
+    nav : document.getElementById("nav"),
 }
 
 let prefectureCode = {
@@ -163,19 +164,33 @@ function getInfo(RetrievalInfo) {
         let numberOftrasanctionsDistrict = collection(tradeInfoList, "DistrictName", null);
         let numberOftrasanctionsCity = collection(tradeInfoList, "Prefecture", null);
 
-        for (let key in numberOftrasanctionsCity){
-            console.log(key);
-            console.log(numberOftrasanctionsCity[key]);
-        }
-        console.log("----------------------------------")
-        for (let key in numberOftrasanctionsDistrict){
-            console.log(key);
-            console.log(numberOftrasanctionsDistrict[key]);
+        config.nav.append(pagination());
+
+        config.tradeinfotable.append(pagetitle("地区別平均取引額", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),infoTable(tradePriceindividualRegionAvg, "地区", "平均取引額", `<i class="fas fa-home"></i>`, "avg"));
+
+        let pageList = config.nav.querySelectorAll("#nav");
+        for (let i = 0; i < pageList.length; i++){
+            pageList[i].querySelectorAll("#page1")[0].addEventListener("click", function(){
+                config.tradeinfotable.innerHTML = "";
+                config.tradeinfotable.append(pagetitle("地区別平均取引額", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),infoTable(tradePriceindividualRegionAvg, "地区", "平均取引額", `<i class="fas fa-home"></i>`, "avg"));
+            });
+
+            pageList[i].querySelectorAll("#page2")[0].addEventListener("click", function(){
+                config.tradeinfotable.innerHTML = "";
+                config.tradeinfotable.append(pagetitle("間取別最大取引額", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),infoTable(maxtardePriceByFloorPlan, "間取", "最大取引額", `<i class="fas fa-home"></i>`));
+            });
+
+            pageList[i].querySelectorAll("#page3")[0].addEventListener("click", function(){
+                config.tradeinfotable.innerHTML = "";
+                config.tradeinfotable.append(pagetitle("地区別取引件数割合", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),progressHTML(numberOftrasanctionsDistrict, numberOftrasanctionsCity, "総取引件数", `<i class="fas fa-house-user"></i>`,"取引件数"));
+            });
+
+            pageList[i].querySelectorAll("#page4")[0].addEventListener("click", function(){
+                config.tradeinfotable.innerHTML = "";
+                config.tradeinfotable.append(pagetitle("地区別取引額割合", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),progressHTML(tradePriceTotalDistrict, tradePriceTotalCity, "総取引額",`<i class="fas fa-money-bill-wave-alt"></i>`, "取引額"));
+            })
         }
 
-        // config.tradeinfotable.append(pagetitle("地区別取引高割合", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),progressHTML(tradePriceTotalDistrict, tradePriceTotalCity));
-
-        config.tradeinfotable.append(progressHTML(numberOftrasanctionsDistrict, numberOftrasanctionsCity));
     });
 }
 
@@ -184,8 +199,7 @@ function pagination(){
     div.classList.add("d-flex", "justify-content-center", "mt-3", "pageitem", "flex-column","h-auto", "align-items-center");
     div.innerHTML = 
     `
-    <div><b>お探しのものはなんですか？</b></div>
-    <nav aria-label="Page navigation example">
+    <nav aria-label="Page navigation example" id="nav">
         <ul class="pagination">
             <li class="page-item">
                 <a class="page-link" href="./index.html" aria-label="Previous">
@@ -193,9 +207,10 @@ function pagination(){
                 <span class="sr-only">Previous</span>
                 </a>
             </li>
-            <li class="page-item" id="page1"><a class="page-link" >1</a></li>
-            <li class="page-item" id="page2"><a class="page-link" >2</a></li>
-            <li class="page-item" id="page3"><a class="page-link" >3</a></li>
+            <li class="page-item" id="page1"><a class="page-link">1</a></li>
+            <li class="page-item" id="page2"><a class="page-link">2</a></li>
+            <li class="page-item" id="page3"><a class="page-link">3</a></li>
+            <li class="page-item" id="page4"><a class="page-link">4</a></li>
         </ul>
     </nav>
     `
@@ -264,7 +279,7 @@ function pagetitle(title, prefectureAndCity, periodStartToEnd, infotabletitle=nu
 }
 
 
-function infoTable(infoMap, layout, pricetitle, icon, getdata=null){
+function infoTable(infoMap, district=null, pricetitle=null, icon=null, getdata=null){
     let container = document.createElement("div");
     container.classList.add("mt-3")
     let table = document.createElement("table");
@@ -275,7 +290,7 @@ function infoTable(infoMap, layout, pricetitle, icon, getdata=null){
         <thead>
             <tr>
                 <th>#</th>
-                <th>${layout}</th>
+                <th>${district}</th>
                 <th>${pricetitle}</th>
             </tr>
         </thead>
@@ -284,48 +299,37 @@ function infoTable(infoMap, layout, pricetitle, icon, getdata=null){
     if (Object.keys(infoMap).length){
         let data = "";
         for (let key in infoMap){
-            if (getdata == "avg"){
-                data = (infoMap[key][0] / infoMap[key][1]).toFixed(1); 
+            if (key != "undefined"){
+                if (getdata == "avg"){
+                    data = (infoMap[key][0] / infoMap[key][1]).toFixed(1); 
+                }
+                else {
+                    data = infoMap[key];
+                }
+                tbody.innerHTML += 
+                `
+                <tr>
+                    <th scope="row">${icon}</th>
+                    <td>${key}</td>
+                    <td>¥ ${new Intl.NumberFormat().format(data)}</td>
+                </tr>
+                `
             }
             else {
-                data = infoMap[key];
+                tbody.innerHTML += 
+                `
+                <tr>
+                    <th scope="row">${icon}</th>
+                    <td>No Data</td>
+                    <td>No Data</td>
+                </tr>
+                `
             }
-            tbody.innerHTML += 
-            `
-            <tr>
-                <th scope="row">${icon}</th>
-                <td>${key}</td>
-                <td>¥ ${new Intl.NumberFormat().format(data)}</td>
-            </tr>
-            `
-        }
         table.append(tbody);
-    }
-    else {
-        tbody.innerHTML += 
-            `
-            <tr>
-                <th scope="row">${icon}</th>
-                <td>No Data</td>
-                <td>No Data</td>
-            </tr>
-            `
-        table.append(tbody)
+        }
     }
     container.append(table);
     return container;
-}
-
-function maximumTradePrice(tradePriceList){
-    return tradePriceList.reduce(function(a,b){
-        return Math.max(a,b);
-    })
-}
-
-function minimumTradePrice(tradePriceList){
-    return tradePriceList.reduce(function(a,b){
-        return Math.min(a,b);
-    })
 }
 
 function editData(tradeInfoCity){
@@ -348,14 +352,14 @@ function progressHTML(tradeInfoDistrict, tradeInfoCity, mainInfo=null, icon=null
     progresscontainer.classList.add("mt-3");
     progresscontainer.innerHTML = 
     `
-    <b>${mainInfo}: ${icon}${new Intl.NumberFormat().format(total)}</b>
+    <b>${mainInfo}: ${icon} ${new Intl.NumberFormat().format(total)}</b>
     `
     for (let key in tradeInfoDistrict){
         let rate = (tradeInfoDistrict[key] / total * 100).toFixed(6);
         let div = document.createElement("div");
         div.innerHTML = 
         `   
-        <div class="mt-3">地区: ${key} - ${info1}割合: ${rate}% - ${info2}: <b>${icon}${new Intl.NumberFormat().format(tradeInfoDistrict[key])}</b></div>
+        <div class="mt-3">地区: ${key} - ${info1}割合: ${rate}% - ${info1}: <b>${icon} ${new Intl.NumberFormat().format(tradeInfoDistrict[key])}</b></div>
         <div class="progress">
             <div class="progress-bar progress-bar-striped progress-bar-animated text-dark" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: ${rate}%"></div>
         </div>
@@ -368,12 +372,6 @@ function progressHTML(tradeInfoDistrict, tradeInfoCity, mainInfo=null, icon=null
 
 codeSelect.prefectureSelect(); 
 codeSelect.cityCodeSelect();
-
-
-{/* <div class="progress">
-<div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
-</div> */}
-
 
 // "Type":"中古マンション等"
 // "MunicipalityCode":"13102"
@@ -395,3 +393,6 @@ codeSelect.cityCodeSelect();
 
 // https://www.land.mlit.go.jp/webland/api/TradeListSearch?from=20201&to=20202&area=05&city=05202
 // https://www.land.mlit.go.jp/webland/api/TradeListSearch?from=20201&to=20202&area=13&city=13102
+
+
+//home icon <i class="fas fa-home"></i>
