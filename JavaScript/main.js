@@ -166,31 +166,29 @@ function getInfo(RetrievalInfo) {
 
         config.nav.append(pagination());
 
+        //最初に表示するdata
         config.tradeinfotable.append(pagetitle("地区別平均取引額", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),infoTable(tradePriceindividualRegionAvg, "地区", "平均取引額", `<i class="fas fa-home"></i>`, "avg"));
 
-        let pageList = config.nav.querySelectorAll("#nav");
-        for (let i = 0; i < pageList.length; i++){
-            pageList[i].querySelectorAll("#page1")[0].addEventListener("click", function(){
-                config.tradeinfotable.innerHTML = "";
-                config.tradeinfotable.append(pagetitle("地区別平均取引額", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),infoTable(tradePriceindividualRegionAvg, "地区", "平均取引額", `<i class="fas fa-home"></i>`, "avg"));
-            });
+        //page選択で表示を変える
+        config.nav.querySelectorAll("#page1")[0].addEventListener("click", function(){
+            config.tradeinfotable.innerHTML = "";
+            config.tradeinfotable.append(pagetitle("地区別平均取引額", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),infoTable(tradePriceindividualRegionAvg, "地区", "平均取引額", `<i class="fas fa-home"></i>`, "avg"));
+        });
 
-            pageList[i].querySelectorAll("#page2")[0].addEventListener("click", function(){
-                config.tradeinfotable.innerHTML = "";
-                config.tradeinfotable.append(pagetitle("間取別最大取引額", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),infoTable(maxtardePriceByFloorPlan, "間取", "最大取引額", `<i class="fas fa-home"></i>`));
-            });
+        config.nav.querySelectorAll("#page2")[0].addEventListener("click", function(){
+            config.tradeinfotable.innerHTML = "";
+            config.tradeinfotable.append(pagetitle("間取別最大取引額", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),infoTable(maxtardePriceByFloorPlan, "間取", "最大取引額", `<i class="fas fa-home"></i>`));
+        });
 
-            pageList[i].querySelectorAll("#page3")[0].addEventListener("click", function(){
-                config.tradeinfotable.innerHTML = "";
-                config.tradeinfotable.append(pagetitle("地区別取引件数割合", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),progressHTML(numberOftrasanctionsDistrict, numberOftrasanctionsCity, "総取引件数", `<i class="fas fa-house-user"></i>`,"取引件数"));
-            });
+        config.nav.querySelectorAll("#page3")[0].addEventListener("click", function(){
+            config.tradeinfotable.innerHTML = "";
+            config.tradeinfotable.append(pagetitle("地区別取引件数割合", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),progressHTML(numberOftrasanctionsDistrict, numberOftrasanctionsCity, "総取引件数", `<i class="fas fa-house-user"></i>`,"取引件数"));
+        });
 
-            pageList[i].querySelectorAll("#page4")[0].addEventListener("click", function(){
-                config.tradeinfotable.innerHTML = "";
-                config.tradeinfotable.append(pagetitle("地区別取引額割合", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),progressHTML(tradePriceTotalDistrict, tradePriceTotalCity, "総取引額",`<i class="fas fa-money-bill-wave-alt"></i>`, "取引額"));
-            })
-        }
-
+        config.nav.querySelectorAll("#page4")[0].addEventListener("click", function(){
+            config.tradeinfotable.innerHTML = "";
+            config.tradeinfotable.append(pagetitle("地区別取引額割合", concatenation(prefectureCode[RetrievalInfo.prefecture], cityCode[RetrievalInfo.city]),concatenation(splitString(RetrievalInfo.start), splitString(RetrievalInfo.end))),progressHTML(tradePriceTotalDistrict, tradePriceTotalCity, "総取引額",`<i class="fas fa-money-bill-wave-alt"></i>`, "取引額"));
+        });
     });
 }
 
